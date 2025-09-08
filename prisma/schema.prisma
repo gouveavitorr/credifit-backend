@@ -11,28 +11,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Person {
+model User {
   id       Int    @id @default(autoincrement())
   name     String
   cpf      String @unique
   email    String @unique
   password String
 
-  employee    Employee?
-  salesperson Salesperson?
+  employee              Employee?
+  companyRepresentative CompanyRepresentative?
 }
 
 model Employee {
-  id       Int    @id @default(autoincrement())
-  salary   Float
-  person   Person @relation(fields: [personId], references: [id])
-  personId Int    @unique
+  id     Int   @id @default(autoincrement())
+  salary Float
+  User   User  @relation(fields: [UserId], references: [id])
+  UserId Int   @unique
+
+  Loan Loan[]
 }
 
-model Salesperson {
+model CompanyRepresentative {
   id          Int    @id @default(autoincrement())
   cnpj        String
   companyName String
-  person      Person @relation(fields: [personId], references: [id])
-  personId    Int    @unique
+  User        User   @relation(fields: [UserId], references: [id])
+  UserId      Int    @unique
+}
+
+model Loan {
+  id           Int       @id @default(autoincrement())
+  amount       Float
+  dueDate      DateTime?
+  parcelAmount Int?
+  approved     Boolean
+
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  employeeId Int
 }
