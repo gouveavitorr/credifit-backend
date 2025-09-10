@@ -5,9 +5,14 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get()
-  async findAll() {
-    return this.userService.findAll();
+  @Get(':id')
+  async findById(@Param('id') id: string) {
+    const user = await this.userService.findById(id);
+
+    if (!user) {
+      throw new NotFoundException('User with given id not found');
+    }
+    return user;
   }
 
   @Get(':email')
@@ -18,5 +23,10 @@ export class UserController {
       throw new NotFoundException('User with given email not found');
     }
     return user;
+  }
+
+  @Get()
+  async findAll() {
+    return this.userService.findAll();
   }
 }
