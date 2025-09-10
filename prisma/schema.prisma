@@ -7,44 +7,45 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:./dev.db"
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
+  id       String @id @default(uuid())
   name     String
   cpf      String @unique
   email    String @unique
   password String
 
-  employee              Employee?
-  companyRepresentative CompanyRepresentative?
+  employee Employee?
 }
 
 model Employee {
-  id     Int   @id @default(autoincrement())
-  salary Float
-  User   User  @relation(fields: [UserId], references: [id])
-  UserId Int   @unique
+  id        String   @id @default(uuid())
+  salary    Float
+  company   Company? @relation(fields: [companyId], references: [id])
+  companyId String?
+  User      User     @relation(fields: [UserId], references: [id])
+  UserId    String   @unique
 
   Loan Loan[]
 }
 
-model CompanyRepresentative {
-  id          Int    @id @default(autoincrement())
+model Company {
+  id          String @id @default(uuid())
   cnpj        String
   companyName String
-  User        User   @relation(fields: [UserId], references: [id])
-  UserId      Int    @unique
+
+  Employee Employee[]
 }
 
 model Loan {
-  id           Int       @id @default(autoincrement())
+  id           String    @id @default(uuid())
   amount       Float
   dueDate      DateTime?
   parcelAmount Int?
   approved     Boolean
 
   employee   Employee @relation(fields: [employeeId], references: [id])
-  employeeId Int
+  employeeId String
 }
