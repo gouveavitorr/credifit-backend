@@ -8,10 +8,10 @@
   - 0 - 2k salary - at least 400 score
   - 2 - 4k salary - at least 500 score
   - 8k salary - at least 600 score
-  - 12k salary - at least 700 score
-  - more than 12k - not available?
+  - 12k+ salary - at least 700 score
 
-- employee's cnpj must be one of our database's cnpj from a companyRepresentative
+- employee's cnpj must be one of our database's cnpj from a company
+
 - at the end of the loan request, if it was approved, the system makes a request from https://mocki.io/v1/386c594b-d42f-4d14-8036-508a0cf1264c to emulate the delivery
   - if the link has problems, send a payload with {"status": "aprovado"}
 
