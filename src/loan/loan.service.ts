@@ -3,6 +3,7 @@ import { Company, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { createLoanDto } from './dto/createLoanDto';
 import axios from 'axios';
+import { generateDueDate } from 'src/utils/generateDueDate';
 
 @Injectable()
 export class LoanService {
@@ -27,8 +28,13 @@ export class LoanService {
   }
 
   async createLoan(createLoanDto: createLoanDto) {
-    const { amount, approved, dueDate, parcelAmount, employeeId } =
-      createLoanDto;
+    const { amount, approved, parcelAmount, employeeId } = createLoanDto;
+
+    if (parcelAmount < 1 || parcelAmount > 4) {
+      throw new Error('Parcel amount out of bounds');
+    }
+
+    const dueDate = generateDueDate(new Date());
 
     const employee = await this.prisma.employee.findUnique({
       where: {
@@ -38,7 +44,14 @@ export class LoanService {
 
     if (!employee) throw new Error('Employee not found');
 
-    if (!employee.companyId) {
+    if (employee.companyId) {
+      const company = await this.prisma.company.findUnique({
+        where: { id: employee.companyId },
+      });
+
+      if (!company)
+        throw new Error('User is not associated with a valid company');
+    } else if (!employee.companyId) {
       throw new Error('User is not associated with a valid company');
     }
 
@@ -85,6 +98,7 @@ export class LoanService {
       });
 
     //check due date
+
     const loan = await this.prisma.loan.create({
       data: {
         amount,
