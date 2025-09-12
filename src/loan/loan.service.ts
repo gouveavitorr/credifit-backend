@@ -5,10 +5,11 @@ import { createLoanDto } from './dto/createLoanDto';
 import axios from 'axios';
 import { generateDueDate } from 'src/utils/generateDueDate';
 import { minimumScoreChecker } from 'src/utils/minimumScoreChecker';
+import { EmployeeService } from 'src/employee/employee.service';
 
 @Injectable()
 export class LoanService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, employeeService: EmployeeService) {}
 
   async findByEmployeeId(employeeId: Loan['employeeId']) {
     const loans = await this.prisma.loan.findMany({
@@ -42,15 +43,12 @@ export class LoanService {
 
     const dueDate = generateDueDate(new Date());
 
-    const employee = await this.prisma.employee.findUnique({
-      where: {
-        id: employeeId,
-      },
-    });
+    const employee = await this.employeeService.findById(employeeId)
 
     if (!employee) throw new Error('Employee not found');
 
     if (employee.companyId) {
+      //await this.companyService.findById(employee.companyId)
       const company = await this.prisma.company.findUnique({
         where: { id: employee.companyId },
       });
@@ -101,6 +99,8 @@ export class LoanService {
       .catch((error) => {
         console.log(error);
       });
+
+      if(!isApproved) throw new Error('Loan request not approved');
 
     const loan = await this.prisma.loan.create({
       data: {
