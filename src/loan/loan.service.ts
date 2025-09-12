@@ -1,27 +1,33 @@
 import { Injectable } from '@nestjs/common';
-import { Company, User } from '@prisma/client';
+import { Company, Employee, Loan } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { createLoanDto } from './dto/createLoanDto';
 import axios from 'axios';
 import { generateDueDate } from 'src/utils/generateDueDate';
+import { minimumScoreChecker } from 'src/utils/minimumScoreChecker';
 
 @Injectable()
 export class LoanService {
   constructor(private prisma: PrismaService) {}
 
-  async findByCpf(cpf: User['cpf']) {
-    const loans = await this.prisma.user.findMany({
+  async findByEmployeeId(employeeId: Loan['employeeId']) {
+    const loans = await this.prisma.loan.findMany({
       where: {
-        cpf: cpf,
+        employeeId,
       },
     });
     return loans;
   }
 
-  async findByCnpj(cnpj: Company['cnpj']) {
-    const loans = await this.prisma.company.findMany({
+  async findByCompany(companyId: Employee['companyId']) {
+    const loans = await this.prisma.loan.findMany({
       where: {
-        cnpj: cnpj,
+        employee: {
+          companyId,
+        },
+      },
+      include: {
+        employee: true,
       },
     });
     return loans;
@@ -55,18 +61,18 @@ export class LoanService {
       throw new Error('User is not associated with a valid company');
     }
 
-    //check score
-    axios
-      .post('https://mocki.io/v1/f7b3627c-444a-4d65-b76b-d94a6c63bdcf', {
-        score: 650,
-      })
+    const isScoreValid: boolean = await axios
+      .post<{ score: number }>(
+        'https://35ec58f0-85f2-4329-9ab4-8650c5e89b99.mock.pstmn.io/score',
+      )
       .then((response) => {
-        console.log(response);
+        return minimumScoreChecker(response.data.score, employee.salary);
       })
-      .catch((error) => {
-        console.log(error);
+      .catch(() => {
+        throw new Error('Failed to fetch score');
       });
-    //throw error if score is not enough based on the salary
+
+    if (!isScoreValid) throw new Error('Score is invalid for this operation');
 
     const activeLoans = await this.prisma.loan.findMany({
       where: { employeeId },
@@ -85,19 +91,16 @@ export class LoanService {
       throw new Error('Loan requested surpasses loan limit');
     }
 
-    //mock delivery
-    axios
-      .post('https://mocki.io/v1/386c594b-d42f-4d14-8036-508a0cf1264c', {
-        status: 'aprovado',
-      })
+    const isApproved: boolean = axios
+      .post<{ status: 'aprovado' | 'reprovado' }>(
+        'https://35ec58f0-85f2-4329-9ab4-8650c5e89b99.mock.pstmn.io/delivery',
+      )
       .then((response) => {
-        console.log(response);
+        return response.data.status === 'aprovado' ? true : false;
       })
       .catch((error) => {
         console.log(error);
       });
-
-    //check due date
 
     const loan = await this.prisma.loan.create({
       data: {
