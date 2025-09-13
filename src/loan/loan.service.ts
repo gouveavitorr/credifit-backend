@@ -1,15 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { Company, Employee, Loan } from '@prisma/client';
+import { Employee, Loan } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { createLoanDto } from './dto/createLoanDto';
 import axios from 'axios';
 import { generateDueDate } from 'src/utils/generateDueDate';
 import { minimumScoreChecker } from 'src/utils/minimumScoreChecker';
 import { EmployeeService } from 'src/employee/employee.service';
+import { CompanyService } from 'src/company/company.service';
 
 @Injectable()
 export class LoanService {
-  constructor(private prisma: PrismaService, employeeService: EmployeeService) {}
+  constructor(
+    private prisma: PrismaService,
+    private employeeService: EmployeeService,
+    private companyService: CompanyService,
+  ) {}
 
   async findByEmployeeId(employeeId: Loan['employeeId']) {
     const loans = await this.prisma.loan.findMany({
@@ -43,15 +48,12 @@ export class LoanService {
 
     const dueDate = generateDueDate(new Date());
 
-    const employee = await this.employeeService.findById(employeeId)
+    const employee = await this.employeeService.findById(employeeId);
 
     if (!employee) throw new Error('Employee not found');
 
     if (employee.companyId) {
-      //await this.companyService.findById(employee.companyId)
-      const company = await this.prisma.company.findUnique({
-        where: { id: employee.companyId },
-      });
+      const company = await this.companyService.findById(employee.companyId);
 
       if (!company)
         throw new Error('User is not associated with a valid company');
@@ -89,7 +91,7 @@ export class LoanService {
       throw new Error('Loan requested surpasses loan limit');
     }
 
-    const isApproved: boolean = axios
+    const isApproved: boolean = await axios
       .post<{ status: 'aprovado' | 'reprovado' }>(
         'https://35ec58f0-85f2-4329-9ab4-8650c5e89b99.mock.pstmn.io/delivery',
       )
@@ -98,9 +100,10 @@ export class LoanService {
       })
       .catch((error) => {
         console.log(error);
+        return false;
       });
 
-      if(!isApproved) throw new Error('Loan request not approved');
+    if (!isApproved) throw new Error('Loan request not approved');
 
     const loan = await this.prisma.loan.create({
       data: {
