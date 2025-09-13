@@ -6,6 +6,12 @@ import { EmployeeModule } from './employee/employee.module';
 import { CompanyModule } from './company/company.module';
 
 @Module({
-  imports: [UserModule, PrismaModule, LoanModule, EmployeeModule, CompanyModule],
+  imports: [
+    UserModule,
+    PrismaModule,
+    LoanModule,
+    EmployeeModule,
+    CompanyModule,
+  ],
 })
 export class AppModule {}
