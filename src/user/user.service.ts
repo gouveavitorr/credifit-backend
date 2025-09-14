@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UserDto } from './dto/UserDto';
 
 @Injectable()
 export class UserService {
@@ -20,7 +21,12 @@ export class UserService {
     return user;
   }
 
-  async findAll() {
-    return this.prisma.user.findMany();
+  async findAll(): Promise<UserDto[]> {
+    return this.prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
   }
 }
