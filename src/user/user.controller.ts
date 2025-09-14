@@ -5,7 +5,7 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get(':id')
+  @Get('id/:id')
   async findById(@Param('id') id: string) {
     const user = await this.userService.findById(id);
 
@@ -15,7 +15,7 @@ export class UserController {
     return user;
   }
 
-  @Get(':email')
+  @Get('email/:email')
   async findByEmail(@Param('email') email: string) {
     const user = await this.userService.findByEmail(email);
 

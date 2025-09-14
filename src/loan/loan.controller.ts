@@ -13,7 +13,7 @@ import { CreateLoanDto } from './dto/CreateLoanDto';
 export class LoanController {
   constructor(private readonly loanService: LoanService) {}
 
-  @Get(':employeeId')
+  @Get('employee/:employeeId')
   async findByEmployeeId(@Param('employeeId') employeeId: string) {
     const loan = await this.loanService.findByEmployeeId(employeeId);
 
@@ -24,7 +24,7 @@ export class LoanController {
     return loan;
   }
 
-  @Get(':companyId')
+  @Get('company/:companyId')
   async findByCompanyId(@Param('companyId') companyId: string) {
     const company = await this.loanService.findByCompany(companyId);
 
