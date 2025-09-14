@@ -10,7 +10,7 @@ export class UserController {
     const user = await this.userService.findById(id);
 
     if (!user) {
-      throw new NotFoundException('User with given id not found');
+      throw new NotFoundException('User with given id was not found');
     }
     return user;
   }
@@ -20,7 +20,7 @@ export class UserController {
     const user = await this.userService.findByEmail(email);
 
     if (!user) {
-      throw new NotFoundException('User with given email not found');
+      throw new NotFoundException('User with given email was not found');
     }
     return user;
   }
