@@ -1,7 +1,5 @@
-export class createLoanDto {
+export class CreateLoanDto {
   amount: number;
   parcelAmount: number;
-  approved: boolean;
-
   employeeId: string;
 }
